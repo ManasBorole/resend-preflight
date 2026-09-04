@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState, type ChangeEvent, type ReactNode } from "react";
 import type { Result, Summary } from "@/lib/score";
 
 const SAMPLE = `jane.doe@gmail.com
@@ -27,6 +27,37 @@ export default function Home() {
   const [duplicates, setDuplicates] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Pull every email-looking token out of an uploaded file (CSV, TSV, or plain
+  // list) — avoids brittle column-mapping; we just want the addresses.
+  function extractEmails(raw: string): string {
+    const matches = raw.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g) ?? [];
+    return matches.join("\n");
+  }
+
+  async function onFile(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const raw = await file.text();
+    setText(extractEmails(raw));
+    e.target.value = ""; // allow re-uploading the same file
+  }
+
+  function downloadCsv(rows: Result[], filename: string) {
+    const header = "email,risk,provider,domain_type,reasons";
+    const body = rows
+      .map((r) =>
+        [r.email, r.risk, r.provider ?? "", r.domain_type ?? "", `"${r.reasons.join("; ")}"`].join(","),
+      )
+      .join("\n");
+    const blob = new Blob([`${header}\n${body}`], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 
   async function run() {
     setLoading(true);
@@ -84,6 +115,10 @@ export default function Home() {
           >
             Load sample list
           </button>
+          <label className="cursor-pointer rounded-lg border border-neutral-700 px-4 py-2 text-sm text-neutral-300 transition hover:border-neutral-500">
+            Upload CSV / list
+            <input type="file" accept=".csv,.txt,.tsv,text/plain" onChange={onFile} className="hidden" />
+          </label>
           <span className="text-xs text-neutral-500">Max 100 per check</span>
         </div>
       </div>
@@ -107,6 +142,29 @@ export default function Home() {
         <p className="mt-3 text-xs text-neutral-500">
           {duplicates} duplicate{duplicates > 1 ? "s" : ""} removed before checking.
         </p>
+      )}
+
+      {results && results.length > 0 && (
+        <div className="mt-6 flex flex-wrap gap-3">
+          <button
+            onClick={() => downloadCsv(results.filter((r) => r.risk === "safe"), "safe-emails.csv")}
+            className="rounded-lg border border-emerald-500/40 px-3 py-1.5 text-xs text-emerald-400 transition hover:border-emerald-500"
+          >
+            Download safe only
+          </button>
+          <button
+            onClick={() => downloadCsv(results.filter((r) => r.risk !== "invalid"), "cleaned-list.csv")}
+            className="rounded-lg border border-neutral-700 px-3 py-1.5 text-xs text-neutral-300 transition hover:border-neutral-500"
+          >
+            Download cleaned (drop invalid)
+          </button>
+          <button
+            onClick={() => downloadCsv(results, "full-report.csv")}
+            className="rounded-lg border border-neutral-700 px-3 py-1.5 text-xs text-neutral-300 transition hover:border-neutral-500"
+          >
+            Download full report
+          </button>
+        </div>
       )}
 
       {results && (
