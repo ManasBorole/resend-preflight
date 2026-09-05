@@ -22,19 +22,24 @@ providers don't include a pre-send hygiene check — this is that missing step.
 
 Plus: duplicate detection, CSV/list upload, and export of the cleaned list.
 
-## Connect a Resend audience
+## Connect your Resend contacts
 
-Optionally pull the contacts from one of your **Resend** audiences, check them, and write the
-result back onto each contact as a `preflight_status` property (`safe` / `risky` / `invalid`) —
-a non-destructive tag you can segment on before a broadcast. An explicit, opt-in toggle can also
-set `unsubscribed: true` on the invalid contacts to suppress them from future sends.
+Optionally check every contact in your **Resend** account, then write the result back onto each
+contact as a `preflight_status` property (`safe` / `risky` / `invalid`) plus a
+`preflight_checked_at` timestamp — non-destructive tags you can segment on before a broadcast. An
+explicit, opt-in toggle can also set `unsubscribed: true` on the invalid contacts to suppress them
+from future sends.
 
-- Uses `GET /audiences`, `GET /audiences/{id}/contacts`, and `PATCH /audiences/{id}/contacts/{id}`.
+- Resend's contacts API is account-level (flat), so this uses `GET /contacts` (paged),
+  `PATCH /contacts/{id}`, and `POST /contact-properties`. Custom properties must be **defined**
+  before they can be set on a contact, so the app creates the two properties first, then tags.
 - **Your API key is never stored, logged, or committed.** It's supplied at request time, sent only
   to this app's own server route for that request, and used to call Resend. No server-side key is
-  configured or required. Use a key you can rotate.
-- Writes are gated behind a confirmation and default to a read-only check (dry run) until you click
-  *Apply*.
+  configured or required. Use a **Full-access** key you can rotate.
+- Writes are gated behind a confirmation dialog and default to a read-only check until you click
+  *Apply*. Resend 429s are retried with backoff.
+- The read pages through all contacts for an accurate total; the check itself processes up to the
+  first 100 per run to stay within serverless limits.
 
 ## Honest ceiling
 
