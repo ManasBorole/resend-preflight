@@ -1,5 +1,7 @@
 # Email List Pre-flight
 
+**Live demo → [resend-preflight.vercel.app](https://resend-preflight.vercel.app)**
+
 Check an email list **before you send it**. Paste or upload a list and get a per-address
 verdict — `safe` / `risky` / `invalid` — with the reasons, in seconds. No email is sent, no
 signup, no paid API.
@@ -64,11 +66,13 @@ npm run build      # production build + typecheck
 - **`lib/score.ts`** — folds raw checks into a single verdict + human-readable reasons.
 - **`lib/typo.ts`**, **`lib/providers.ts`**, **`lib/disposable-domains.*`** — the individual signals.
 - **`app/api/check/route.ts`** — Node-runtime API route; concurrency-capped, max 100 emails/request.
-- **`app/page.tsx`** — the UI.
+- **`lib/resend.ts` + `app/api/resend/*`** — server-side Resend client and routes (list/check/tag contacts); the API key never leaves the server.
+- **`app/page.tsx`** + **`app/components/*`** — the UI (checker, results table, Resend panel, confirm dialog).
 
 ## Tech stack
 
-Next.js 16 (App Router) · TypeScript · Tailwind CSS · Node.js runtime for DNS.
+Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS v4 · Node.js runtime for DNS.
+No runtime dependencies beyond the framework — DNS via the standard library, disposable list bundled, Resend called with plain `fetch`.
 
 ## Limitations
 
