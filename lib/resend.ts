@@ -8,7 +8,6 @@
 
 const BASE = "https://api.resend.com";
 
-export type Audience = { id: string; name: string };
 export type ContactProperty = { id: string; key: string; type: string };
 export type Contact = {
   id: string;
@@ -40,13 +39,6 @@ async function parseError(res: Response): Promise<never> {
     // non-JSON error body; keep statusText
   }
   throw new ResendError(res.status, detail);
-}
-
-export async function listAudiences(apiKey: string): Promise<Audience[]> {
-  const res = await fetch(`${BASE}/audiences`, { headers: authHeaders(apiKey) });
-  if (!res.ok) await parseError(res);
-  const body = await res.json();
-  return (body?.data ?? []).map((a: Audience) => ({ id: a.id, name: a.name }));
 }
 
 export async function listContacts(apiKey: string, limit = 100): Promise<Contact[]> {

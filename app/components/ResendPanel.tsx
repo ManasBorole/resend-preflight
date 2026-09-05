@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import type { Result, Summary } from "@/lib/score";
-import type { Audience } from "@/lib/resend";
 import { SummaryTiles, ResultList } from "@/app/components/Results";
 import { ConfirmDialog } from "@/app/components/ConfirmDialog";
 
@@ -21,46 +20,28 @@ async function postJson(url: string, body: unknown) {
 
 export function ResendPanel() {
   const [apiKey, setApiKey] = useState("");
-  const [audiences, setAudiences] = useState<Audience[]>([]);
-  const [audienceId, setAudienceId] = useState("");
   const [results, setResults] = useState<ContactResult[] | null>(null);
   const [summary, setSummary] = useState<Summary | null>(null);
   const [meta, setMeta] = useState<{ total: number; truncated: boolean } | null>(null);
   const [unsubscribeInvalid, setUnsubscribeInvalid] = useState(false);
-  const [busy, setBusy] = useState<"" | "audiences" | "check" | "apply">("");
+  const [busy, setBusy] = useState<"" | "check" | "apply">("");
   const [error, setError] = useState<string | null>(null);
   const [applied, setApplied] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
 
-  async function loadAudiences() {
-    setBusy("audiences");
-    setError(null);
-    setApplied(null);
-    try {
-      const data = await postJson("/api/resend/audiences", { apiKey });
-      setAudiences(data.audiences);
-      setAudienceId(data.audiences[0]?.id ?? "");
-      if (data.audiences.length === 0) setError("No audiences found for this API key.");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load audiences");
-    } finally {
-      setBusy("");
-    }
-  }
-
-  async function checkAudience() {
+  async function checkContacts() {
     setBusy("check");
     setError(null);
     setApplied(null);
     setResults(null);
     setSummary(null);
     try {
-      const data = await postJson("/api/resend/contacts", { apiKey, audienceId });
+      const data = await postJson("/api/resend/contacts", { apiKey });
       setResults(data.results);
       setSummary(data.summary);
       setMeta({ total: data.total_contacts, truncated: data.truncated });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to check audience");
+      setError(e instanceof Error ? e.message : "Failed to check contacts");
     } finally {
       setBusy("");
     }
@@ -73,7 +54,7 @@ export function ResendPanel() {
       `Write a "preflight_status" property to ${results.length} contacts ` +
       `(${flagged} flagged risky/invalid)` +
       (unsubscribeInvalid ? ", and unsubscribe the invalid ones" : "") +
-      `. This modifies your Resend audience.`
+      `. This modifies your Resend contacts.`
     );
   }
 
@@ -85,7 +66,6 @@ export function ResendPanel() {
     try {
       const data = await postJson("/api/resend/apply", {
         apiKey,
-        audienceId,
         unsubscribeInvalid,
         updates: results.map((r) => ({ contactId: r.contactId, risk: r.risk })),
       });
@@ -104,10 +84,10 @@ export function ResendPanel() {
 
   return (
     <section className="mt-12 rounded-xl border border-neutral-800 bg-neutral-900/30 p-4">
-      <h2 className="text-lg font-semibold">Connect a Resend audience</h2>
+      <h2 className="text-lg font-semibold">Connect your Resend contacts</h2>
       <p className="mt-1 text-sm text-neutral-400">
-        Pull the contacts from one of your Resend audiences, check them, and write the result back
-        as a <code className="text-neutral-300">preflight_status</code> property on each contact.
+        Check every contact in your Resend account, then write the result back as a{" "}
+        <code className="text-neutral-300">preflight_status</code> property on each contact.
       </p>
 
       <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -119,44 +99,17 @@ export function ResendPanel() {
           className="min-w-[240px] flex-1 rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 font-mono text-sm outline-none focus:border-neutral-600"
         />
         <button
-          onClick={loadAudiences}
+          onClick={checkContacts}
           disabled={busy !== "" || apiKey.trim().length === 0}
-          className={
-            audiences.length === 0
-              ? "rounded-lg bg-white px-4 py-2 text-sm font-medium text-black transition hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-40"
-              : "rounded-lg border border-neutral-700 px-4 py-2 text-sm text-neutral-200 transition hover:border-neutral-500 disabled:opacity-40"
-          }
+          className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-black transition hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {busy === "audiences" ? "Loading…" : audiences.length > 0 ? "Reload audiences" : "Load audiences"}
+          {busy === "check" ? "Checking…" : "Check my contacts"}
         </button>
       </div>
       <p className="mt-2 text-xs text-neutral-600">
-        Your key is sent only to this app’s server for the request and is never stored, logged, or
-        committed. Use a key you can rotate.
+        Needs a Full-access key. Your key is sent only to this app’s server for the request and is
+        never stored, logged, or committed. Use a key you can rotate.
       </p>
-
-      {audiences.length > 0 && (
-        <div className="mt-4 flex flex-wrap items-center gap-3">
-          <select
-            value={audienceId}
-            onChange={(e) => setAudienceId(e.target.value)}
-            className="rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm outline-none focus:border-neutral-600"
-          >
-            {audiences.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.name}
-              </option>
-            ))}
-          </select>
-          <button
-            onClick={checkAudience}
-            disabled={busy !== "" || audienceId === ""}
-            className="rounded-lg bg-white px-4 py-2 text-sm font-medium text-black transition hover:bg-neutral-200 disabled:opacity-40"
-          >
-            {busy === "check" ? "Checking…" : "Check audience"}
-          </button>
-        </div>
-      )}
 
       {error && (
         <p className="mt-4 rounded-lg border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-400">
@@ -168,7 +121,7 @@ export function ResendPanel() {
         <div className="mt-6">
           {meta && meta.total === 0 ? (
             <p className="rounded-lg border border-neutral-800 bg-neutral-900/50 px-4 py-3 text-sm text-neutral-400">
-              This audience has no contacts. Add some in Resend (Audiences → add contacts), then
+              No contacts found in your account. Add some in Resend (Audiences → add contacts), then
               check again.
             </p>
           ) : (
@@ -177,7 +130,7 @@ export function ResendPanel() {
               {meta && (
                 <p className="mt-2 text-xs text-neutral-500">
                   Checked {results?.length ?? 0} of {meta.total} contacts
-                  {meta.truncated ? " (truncated to first 100)" : ""}.
+                  {meta.truncated ? " (truncated)" : ""}.
                 </p>
               )}
             </>
