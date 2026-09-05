@@ -41,11 +41,27 @@ async function parseError(res: Response): Promise<never> {
   throw new ResendError(res.status, detail);
 }
 
-export async function listContacts(apiKey: string, limit = 100): Promise<Contact[]> {
-  const res = await fetch(`${BASE}/contacts?limit=${limit}`, { headers: authHeaders(apiKey) });
-  if (!res.ok) await parseError(res);
-  const body = await res.json();
-  return body?.data ?? [];
+const PAGE_SIZE = 100; // Resend's per-request max
+const MAX_PAGES = 20; // safety bound => up to 2000 contacts fetched
+
+/** Page through every contact in the account (bounded by MAX_PAGES). */
+export async function listContacts(apiKey: string): Promise<Contact[]> {
+  const all: Contact[] = [];
+  let after: string | undefined;
+  for (let page = 0; page < MAX_PAGES; page++) {
+    const url = `${BASE}/contacts?limit=${PAGE_SIZE}${after ? `&after=${after}` : ""}`;
+    const res = await fetch(url, { headers: authHeaders(apiKey) });
+    if (!res.ok) await parseError(res);
+    const body = await res.json();
+    const data: Contact[] = body?.data ?? [];
+    all.push(...data);
+    // Stop when there's no next page or the cursor can't advance.
+    if (!body?.has_more || data.length === 0) break;
+    const nextAfter = data[data.length - 1]?.id;
+    if (!nextAfter || nextAfter === after) break;
+    after = nextAfter;
+  }
+  return all;
 }
 
 /**

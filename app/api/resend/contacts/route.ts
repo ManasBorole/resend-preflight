@@ -25,7 +25,7 @@ export async function POST(req: Request) {
 
   let contacts;
   try {
-    contacts = await listContacts(apiKey.trim(), MAX_CONTACTS);
+    contacts = await listContacts(apiKey.trim());
   } catch (e) {
     if (e instanceof ResendError) return NextResponse.json({ error: e.message }, { status: e.status });
     return NextResponse.json({ error: "Failed to reach Resend" }, { status: 502 });
