@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { Result, Summary } from "@/lib/score";
 import type { Audience } from "@/lib/resend";
 import { SummaryTiles, ResultList } from "@/app/components/Results";
+import { ConfirmDialog } from "@/app/components/ConfirmDialog";
 
 type ContactResult = Result & { contactId: string };
 
@@ -29,6 +30,7 @@ export function ResendPanel() {
   const [busy, setBusy] = useState<"" | "audiences" | "check" | "apply">("");
   const [error, setError] = useState<string | null>(null);
   const [applied, setApplied] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   async function loadAudiences() {
     setBusy("audiences");
@@ -64,16 +66,20 @@ export function ResendPanel() {
     }
   }
 
-  async function apply() {
-    if (!results) return;
+  function confirmMessage(): string {
+    if (!results) return "";
     const flagged = results.filter((r) => r.risk !== "safe").length;
-    const ok = window.confirm(
+    return (
       `Write a "preflight_status" property to ${results.length} contacts ` +
-        `(${flagged} flagged risky/invalid)` +
-        (unsubscribeInvalid ? ", and unsubscribe the invalid ones" : "") +
-        `? This modifies your Resend audience.`,
+      `(${flagged} flagged risky/invalid)` +
+      (unsubscribeInvalid ? ", and unsubscribe the invalid ones" : "") +
+      `. This modifies your Resend audience.`
     );
-    if (!ok) return;
+  }
+
+  async function doApply() {
+    setConfirmOpen(false);
+    if (!results) return;
     setBusy("apply");
     setError(null);
     try {
@@ -115,9 +121,13 @@ export function ResendPanel() {
         <button
           onClick={loadAudiences}
           disabled={busy !== "" || apiKey.trim().length === 0}
-          className="rounded-lg border border-neutral-700 px-4 py-2 text-sm text-neutral-200 transition hover:border-neutral-500 disabled:opacity-40"
+          className={
+            audiences.length === 0
+              ? "rounded-lg bg-white px-4 py-2 text-sm font-medium text-black transition hover:bg-neutral-200 disabled:cursor-not-allowed disabled:opacity-40"
+              : "rounded-lg border border-neutral-700 px-4 py-2 text-sm text-neutral-200 transition hover:border-neutral-500 disabled:opacity-40"
+          }
         >
-          {busy === "audiences" ? "Loading…" : "Load audiences"}
+          {busy === "audiences" ? "Loading…" : audiences.length > 0 ? "Reload audiences" : "Load audiences"}
         </button>
       </div>
       <p className="mt-2 text-xs text-neutral-600">
@@ -156,12 +166,21 @@ export function ResendPanel() {
 
       {summary && (
         <div className="mt-6">
-          <SummaryTiles summary={summary} />
-          {meta && (
-            <p className="mt-2 text-xs text-neutral-500">
-              Checked {results?.length ?? 0} of {meta.total} contacts
-              {meta.truncated ? " (truncated to first 100)" : ""}.
+          {meta && meta.total === 0 ? (
+            <p className="rounded-lg border border-neutral-800 bg-neutral-900/50 px-4 py-3 text-sm text-neutral-400">
+              This audience has no contacts. Add some in Resend (Audiences → add contacts), then
+              check again.
             </p>
+          ) : (
+            <>
+              <SummaryTiles summary={summary} />
+              {meta && (
+                <p className="mt-2 text-xs text-neutral-500">
+                  Checked {results?.length ?? 0} of {meta.total} contacts
+                  {meta.truncated ? " (truncated to first 100)" : ""}.
+                </p>
+              )}
+            </>
           )}
         </div>
       )}
@@ -181,7 +200,7 @@ export function ResendPanel() {
               Also unsubscribe invalid contacts
             </label>
             <button
-              onClick={apply}
+              onClick={() => setConfirmOpen(true)}
               disabled={busy !== ""}
               className="rounded-lg border border-amber-500/40 px-4 py-2 text-sm text-amber-400 transition hover:border-amber-500 disabled:opacity-40"
             >
@@ -196,6 +215,16 @@ export function ResendPanel() {
           {applied}
         </p>
       )}
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Apply results to Resend?"
+        message={confirmMessage()}
+        confirmLabel="Apply"
+        tone="warn"
+        onConfirm={doApply}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </section>
   );
 }
