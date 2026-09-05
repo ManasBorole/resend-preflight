@@ -1,5 +1,7 @@
 # Email List Pre-flight
 
+**Live demo → [resend-preflight.vercel.app](https://resend-preflight.vercel.app)**
+
 Check an email list **before you send it**. Paste or upload a list and get a per-address
 verdict — `safe` / `risky` / `invalid` — with the reasons, in seconds. No email is sent, no
 signup, no paid API.
