@@ -22,7 +22,7 @@ function parseUpdates(value: unknown): Update[] {
 }
 
 export async function POST(req: Request) {
-  let body: { apiKey?: unknown; audienceId?: unknown; updates?: unknown; unsubscribeInvalid?: unknown };
+  let body: { apiKey?: unknown; updates?: unknown; unsubscribeInvalid?: unknown };
   try {
     body = await req.json();
   } catch {
