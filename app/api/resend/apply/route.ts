@@ -42,21 +42,23 @@ export async function POST(req: Request) {
   }
   const alsoUnsubscribe = unsubscribeInvalid === true;
 
-  // The custom property must exist on the account before it can be set on contacts.
+  // Custom properties must exist on the account before they can be set on contacts.
   try {
     await ensureContactProperty(apiKey.trim(), "preflight_status");
+    await ensureContactProperty(apiKey.trim(), "preflight_checked_at");
   } catch (e) {
     const msg = e instanceof ResendError ? e.message : "unknown error";
     return NextResponse.json(
-      { error: `Could not create the preflight_status property: ${msg}` },
+      { error: `Could not create the preflight properties: ${msg}` },
       { status: 502 },
     );
   }
 
+  const checkedAt = new Date().toISOString();
   const outcomes = await mapLimit(updates, CONCURRENCY, async (u) => {
     try {
       await updateContact(apiKey.trim(), u.contactId, {
-        properties: { preflight_status: u.risk },
+        properties: { preflight_status: u.risk, preflight_checked_at: checkedAt },
         // Only ever set unsubscribed when explicitly asked, and only for invalids.
         ...(alsoUnsubscribe && u.risk === "invalid" ? { unsubscribed: true } : {}),
       });
