@@ -22,6 +22,20 @@ providers don't include a pre-send hygiene check — this is that missing step.
 
 Plus: duplicate detection, CSV/list upload, and export of the cleaned list.
 
+## Connect a Resend audience
+
+Optionally pull the contacts from one of your **Resend** audiences, check them, and write the
+result back onto each contact as a `preflight_status` property (`safe` / `risky` / `invalid`) —
+a non-destructive tag you can segment on before a broadcast. An explicit, opt-in toggle can also
+set `unsubscribed: true` on the invalid contacts to suppress them from future sends.
+
+- Uses `GET /audiences`, `GET /audiences/{id}/contacts`, and `PATCH /audiences/{id}/contacts/{id}`.
+- **Your API key is never stored, logged, or committed.** It's supplied at request time, sent only
+  to this app's own server route for that request, and used to call Resend. No server-side key is
+  configured or required. Use a key you can rotate.
+- Writes are gated behind a confirmation and default to a read-only check (dry run) until you click
+  *Apply*.
+
 ## Honest ceiling
 
 This tool does **not** open an SMTP connection to probe whether a specific mailbox exists.
