@@ -1,26 +1,13 @@
 import { NextResponse } from "next/server";
 import { checkEmail } from "@/lib/checks";
 import { score, summarize, type Result } from "@/lib/score";
+import { mapLimit } from "@/lib/concurrency";
 
 // DNS/MX lookups require the Node.js runtime — Edge has no node:dns.
 export const runtime = "nodejs";
 
 const MAX_EMAILS = 100; // keep under the serverless timeout; documented limit
 const CONCURRENCY = 15; // don't hammer resolvers / exhaust sockets
-
-/** Run an async fn over items with a fixed concurrency cap, preserving order. */
-async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
-  const results: R[] = new Array(items.length);
-  let next = 0;
-  async function worker() {
-    while (next < items.length) {
-      const i = next++;
-      results[i] = await fn(items[i]);
-    }
-  }
-  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
-  return results;
-}
 
 function parseEmails(body: unknown): { emails: string[]; duplicates: number } {
   // Accept { emails: string[] } or { text: "one per line / comma separated" }.
