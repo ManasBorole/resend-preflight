@@ -13,22 +13,19 @@ const CONCURRENCY = 15;
 export type ContactResult = Result & { contactId: string };
 
 export async function POST(req: Request) {
-  let apiKey: unknown, audienceId: unknown;
+  let apiKey: unknown;
   try {
-    ({ apiKey, audienceId } = await req.json());
+    ({ apiKey } = await req.json());
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
   if (typeof apiKey !== "string" || apiKey.trim().length === 0) {
     return NextResponse.json({ error: "Missing Resend API key" }, { status: 400 });
   }
-  if (typeof audienceId !== "string" || audienceId.trim().length === 0) {
-    return NextResponse.json({ error: "Missing audience id" }, { status: 400 });
-  }
 
   let contacts;
   try {
-    contacts = await listContacts(apiKey.trim(), audienceId.trim());
+    contacts = await listContacts(apiKey.trim(), MAX_CONTACTS);
   } catch (e) {
     if (e instanceof ResendError) return NextResponse.json({ error: e.message }, { status: e.status });
     return NextResponse.json({ error: "Failed to reach Resend" }, { status: 502 });

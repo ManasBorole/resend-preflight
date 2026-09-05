@@ -9,6 +9,7 @@
 const BASE = "https://api.resend.com";
 
 export type Audience = { id: string; name: string };
+export type ContactProperty = { id: string; key: string; type: string };
 export type Contact = {
   id: string;
   email: string;
@@ -48,10 +49,8 @@ export async function listAudiences(apiKey: string): Promise<Audience[]> {
   return (body?.data ?? []).map((a: Audience) => ({ id: a.id, name: a.name }));
 }
 
-export async function listContacts(apiKey: string, audienceId: string): Promise<Contact[]> {
-  const res = await fetch(`${BASE}/audiences/${audienceId}/contacts`, {
-    headers: authHeaders(apiKey),
-  });
+export async function listContacts(apiKey: string, limit = 100): Promise<Contact[]> {
+  const res = await fetch(`${BASE}/contacts?limit=${limit}`, { headers: authHeaders(apiKey) });
   if (!res.ok) await parseError(res);
   const body = await res.json();
   return body?.data ?? [];
@@ -63,14 +62,41 @@ export async function listContacts(apiKey: string, audienceId: string): Promise<
  */
 export async function updateContact(
   apiKey: string,
-  audienceId: string,
   contactId: string,
   update: { properties?: Record<string, string>; unsubscribed?: boolean },
 ): Promise<void> {
-  const res = await fetch(`${BASE}/audiences/${audienceId}/contacts/${contactId}`, {
+  const res = await fetch(`${BASE}/contacts/${contactId}`, {
     method: "PATCH",
     headers: authHeaders(apiKey),
     body: JSON.stringify(update),
   });
   if (!res.ok) await parseError(res);
+}
+
+/** Custom properties must be defined on the account before they can be set on a contact. */
+export async function listContactProperties(apiKey: string): Promise<ContactProperty[]> {
+  const res = await fetch(`${BASE}/contact-properties`, { headers: authHeaders(apiKey) });
+  if (!res.ok) await parseError(res);
+  const body = await res.json();
+  return body?.data ?? [];
+}
+
+export async function createContactProperty(
+  apiKey: string,
+  key: string,
+  type: "string" | "number" = "string",
+): Promise<void> {
+  const res = await fetch(`${BASE}/contact-properties`, {
+    method: "POST",
+    headers: authHeaders(apiKey),
+    body: JSON.stringify({ key, type }),
+  });
+  if (!res.ok) await parseError(res);
+}
+
+/** Create the property only if it doesn't already exist (idempotent). */
+export async function ensureContactProperty(apiKey: string, key: string): Promise<void> {
+  const existing = await listContactProperties(apiKey);
+  if (existing.some((p) => p.key === key)) return;
+  await createContactProperty(apiKey, key);
 }
