@@ -3,7 +3,7 @@
  *  - provider:    who actually runs the mailbox (Google, Microsoft, ...), read
  *                 from the MX exchange hostnames.
  *  - domain_type: "free" (gmail/yahoo/...) vs "business" (custom domain).
- * Both are informational — they enrich the report, they don't change risk.
+ * Both are informational - they enrich the report, they don't change risk.
  */
 
 /** Free consumer email domains. Membership => domain_type "free". */

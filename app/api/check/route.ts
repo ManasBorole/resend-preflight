@@ -3,7 +3,7 @@ import { checkEmail } from "@/lib/checks";
 import { score, summarize, type Result } from "@/lib/score";
 import { mapLimit } from "@/lib/concurrency";
 
-// DNS/MX lookups require the Node.js runtime — Edge has no node:dns.
+// DNS/MX lookups require the Node.js runtime - Edge has no node:dns.
 export const runtime = "nodejs";
 
 const MAX_EMAILS = 100; // keep under the serverless timeout; documented limit

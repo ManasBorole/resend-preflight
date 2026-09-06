@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-/** Animated confirm modal — a polished replacement for window.confirm(). */
+/** Animated confirm modal - a polished replacement for window.confirm(). */
 export function ConfirmDialog({
   open,
   title,

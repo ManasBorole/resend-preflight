@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  /* Always dark — consistent demo/screenshots regardless of viewer OS theme. */
+  /* Always dark - consistent demo/screenshots regardless of viewer OS theme. */
   --background: #0a0a0a;
   --foreground: #ededed;
 }

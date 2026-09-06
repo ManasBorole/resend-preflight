@@ -1,7 +1,7 @@
 /**
  * Runnable self-check for the pure (offline) logic. No framework.
  *   npm run selfcheck
- * MX is a network call, so it is NOT asserted here — score() is fed synthetic
+ * MX is a network call, so it is NOT asserted here - score() is fed synthetic
  * check objects instead, keeping this deterministic and offline.
  */
 import assert from "node:assert/strict";

@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Email List Pre-flight",
-  description: "Check an email list for deliverability risk before you send — syntax, MX, disposable, and role checks.",
+  description: "Check an email list for deliverability risk before you send - syntax, MX, disposable, and role checks.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

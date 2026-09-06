@@ -4,8 +4,8 @@
  * Design: compare the domain to a list of popular providers by edit distance.
  * Suggest only when it's CLOSE (distance 1-2) and the input isn't itself a known
  * real domain. In practice the caller only surfaces a suggestion for domains
- * that fail the MX check, so real deliverable domains never get "corrected" —
- * that keeps false positives near zero.
+ * that fail the MX check, so real deliverable domains never get "corrected",
+ * which keeps false positives near zero.
  */
 
 const POPULAR_DOMAINS = [
@@ -15,7 +15,7 @@ const POPULAR_DOMAINS = [
   "yandex.com", "gmx.com",
 ];
 
-// Real domains that sit near a popular one by edit distance — never "correct" these.
+// Real domains that sit near a popular one by edit distance - never "correct" these.
 const KNOWN_GOOD = new Set<string>([...POPULAR_DOMAINS, "mail.com", "email.com", "ymail.com"]);
 
 /** Classic Levenshtein edit distance. */

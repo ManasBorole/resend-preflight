@@ -1,10 +1,10 @@
 /**
  * Turn raw checks into a single verdict + human reasons.
  *
- * Judgment calls (documented on purpose — these are the interesting decisions):
+ * Judgment calls (documented on purpose - these are the interesting decisions):
  * - No MX or bad syntax => INVALID. The mail literally cannot be delivered.
  * - Disposable or role address => RISKY, not invalid. It CAN receive mail, but
- *   sending to it hurts engagement/reputation. We flag, we don't reject — the
+ *   sending to it hurts engagement/reputation. We flag, we don't reject - the
  *   user decides. Role addresses especially are a signal, not a verdict.
  */
 import type { EmailChecks } from "./checks";
@@ -23,7 +23,7 @@ export function score(checks: EmailChecks): Result {
     return { ...checks, risk: "invalid", reasons: ["Invalid email syntax"] };
   }
   if (!checks.has_mx) {
-    const base = "Domain has no MX record — it cannot receive email";
+    const base = "Domain has no MX record, so it cannot receive email";
     return {
       ...checks,
       risk: "invalid",

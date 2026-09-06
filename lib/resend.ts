@@ -1,5 +1,5 @@
 /**
- * Minimal Resend API client — server-side only. The API key is passed in per
+ * Minimal Resend API client - server-side only. The API key is passed in per
  * call (it's the *user's* key, supplied at request time) and is never stored,
  * logged, or persisted. Only these routes ever see it.
  *

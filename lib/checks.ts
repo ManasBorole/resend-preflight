@@ -1,8 +1,8 @@
 /**
- * Core email pre-flight checks. All free, all honest — no SMTP handshake.
+ * Core email pre-flight checks. All free, all honest - no SMTP handshake.
  *
  * Honest ceiling: we do NOT open an SMTP connection and `RCPT TO` to prove a
- * mailbox exists. That is rude, unreliable, and wrecks sender reputation — the
+ * mailbox exists. That is rude, unreliable, and wrecks sender reputation - the
  * exact problem this tool exists to prevent. We stop at what public data can
  * tell us: syntax, whether the domain can receive mail (MX), and whether the
  * address is disposable or a role account. Catch-all detection is deliberately
@@ -79,7 +79,7 @@ export async function resolveMxHosts(domain: string): Promise<string[]> {
     const records = await resolveMx(domain);
     return records.map((r) => r.exchange).filter(Boolean);
   } catch {
-    // ENOTFOUND / ENODATA — no MX, treat as cannot-receive.
+    // ENOTFOUND / ENODATA - no MX, treat as cannot-receive.
     return [];
   }
 }

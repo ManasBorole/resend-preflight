@@ -25,7 +25,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
 
   // Pull every email-looking token out of an uploaded file (CSV, TSV, or plain
-  // list) — avoids brittle column-mapping; we just want the addresses.
+  // list) - avoids brittle column-mapping; we just want the addresses.
   function extractEmails(raw: string): string {
     const matches = raw.match(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g) ?? [];
     return matches.join("\n");
@@ -84,7 +84,7 @@ export default function Home() {
         <h1 className="text-3xl font-semibold tracking-tight">Email List Pre-flight</h1>
         <p className="mt-2 text-neutral-400">
           Check a list <span className="text-neutral-200">before you send</span>. Catches invalid
-          syntax, dead domains (no MX), disposable addresses, and role inboxes — all free, no email
+          syntax, dead domains (no MX), disposable addresses, and role inboxes. All free, no email
           sent.
         </p>
       </header>
@@ -93,7 +93,7 @@ export default function Home() {
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Paste emails — one per line, or comma-separated"
+          placeholder="Paste emails, one per line or comma-separated"
           rows={7}
           className="w-full resize-y rounded-lg border border-neutral-800 bg-neutral-950 p-3 font-mono text-sm outline-none focus:border-neutral-600"
         />
@@ -161,7 +161,7 @@ export default function Home() {
       <ResendPanel />
 
       <footer className="mt-12 border-t border-neutral-800 pt-4 text-xs text-neutral-600">
-        Honest ceiling: no SMTP probing, so we can’t prove a mailbox exists — only that the domain{" "}
+        Honest ceiling: no SMTP probing, so we can’t prove a mailbox exists, only that the domain{" "}
         <em>can</em> receive mail. Disposable list is common providers, not exhaustive.
       </footer>
     </main>
